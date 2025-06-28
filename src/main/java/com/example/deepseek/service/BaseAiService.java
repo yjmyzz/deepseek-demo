@@ -4,7 +4,7 @@ import com.example.deepseek.config.AiConfig;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.reactive.function.client.WebClient;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -13,21 +13,43 @@ import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 
-@RequiredArgsConstructor
+@Slf4j
 public abstract class BaseAiService {
     
     protected final AiConfig aiConfig;
     protected final ObjectMapper objectMapper = new ObjectMapper();
+    
+    protected BaseAiService(AiConfig aiConfig) {
+        this.aiConfig = aiConfig;
+    }
     
     /**
      * 执行流式AI请求
      */
     protected void executeStreamRequest(String prompt, HttpSession session, SseEmitter emitter, 
                                       String provider, String requestType) {
+        // 检查是否已选择AI提供商
+        if (provider == null || provider.trim().isEmpty()) {
+            try {
+                emitter.send("请先选择AI提供商（本地Ollama或远程DeepSeek）后再进行" + requestType + "。");
+                emitter.complete();
+            } catch (Exception e) {
+                emitter.completeWithError(e);
+            }
+            return;
+        }
+        
         if ("ollama".equals(provider)) {
             executeOllamaStreamRequest(prompt, emitter, requestType);
-        } else {
+        } else if ("deepseek".equals(provider)) {
             executeDeepSeekStreamRequest(prompt, session, emitter, requestType);
+        } else {
+            try {
+                emitter.send("不支持的AI提供商：" + provider + "，请选择本地Ollama或远程DeepSeek。");
+                emitter.complete();
+            } catch (Exception e) {
+                emitter.completeWithError(e);
+            }
         }
     }
     
@@ -47,11 +69,11 @@ public abstract class BaseAiService {
                 .bodyToFlux(String.class)
                 .subscribe(
                         chunk -> {
-                            System.out.println("[Ollama" + requestType + "原始流] " + chunk);
+                            log.debug("[Ollama{}原始流] {}", requestType, chunk);
                             processOllamaChunk(chunk, emitter, inThinkBlock);
                         },
                         error -> {
-                            System.err.println("Ollama" + requestType + " API 错误: " + error.getMessage());
+                            log.error("Ollama{} API 错误: {}", requestType, error.getMessage());
                             handleOllamaError(error, emitter);
                         },
                         () -> completeEmitter(emitter)
@@ -81,11 +103,11 @@ public abstract class BaseAiService {
                 .bodyToFlux(String.class)
                 .subscribe(
                         chunk -> {
-                            System.out.println("[DeepSeek" + requestType + "原始流] " + chunk);
+                            log.debug("[DeepSeek{}原始流] {}", requestType, chunk);
                             processDeepSeekChunk(chunk, emitter);
                         },
                         error -> {
-                            System.err.println("DeepSeek" + requestType + " API 错误: " + error.getMessage());
+                            log.error("DeepSeek{} API 错误: {}", requestType, error.getMessage());
                             handleDeepSeekError(error, emitter);
                         },
                         () -> completeEmitter(emitter)
@@ -255,6 +277,6 @@ public abstract class BaseAiService {
      */
     protected String getDefaultProvider(HttpSession session) {
         String provider = (String) session.getAttribute("aiProvider");
-        return provider != null ? provider : "ollama";
+        return provider; // 返回null如果用户未选择
     }
 } 

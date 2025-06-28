@@ -29,10 +29,10 @@
             
             <form th:action="@{/setApiKey}" method="post" class="api-key-form">
                 <div class="form-group">
-                    <label class="form-label">🌐 AI 提供商</label>
+                    <label class="form-label">🌐 AI 提供商 <span class="required">*</span></label>
                     <div class="provider-options">
                         <label class="provider-option" id="ollamaOption">
-                            <input type="radio" name="provider" value="ollama" checked>
+                            <input type="radio" name="provider" value="ollama">
                             <div class="provider-icon">🖥️</div>
                             <div class="provider-name">本地 Ollama</div>
                             <div class="provider-desc">快速免费</div>
@@ -44,34 +44,40 @@
                             <div class="provider-desc">功能强大</div>
                         </label>
                     </div>
+                    <div class="form-error" id="providerError" style="display: none;">
+                        ⚠️ 请选择AI提供商
+                    </div>
                 </div>
                 
                 <div class="form-group" id="apiKeyGroup" style="display: none;">
-                    <label class="form-label">🔑 API Key</label>
+                    <label class="form-label">🔑 API Key <span class="required">*</span></label>
                     <input type="password" 
                            name="apiKey" 
                            class="form-input" 
                            placeholder="请输入你的 DeepSeek API Key" 
                            id="apiKeyInput">
+                    <div class="form-error" id="apiKeyError" style="display: none;">
+                        ⚠️ 请输入API Key
+                    </div>
                 </div>
                 
-                <button type="submit" class="btn btn-primary">开始使用</button>
+                <button type="submit" class="btn btn-primary" id="submitBtn" disabled>开始使用</button>
             </form>
             
-            <div class="features">
-                <a th:href="@{/chat}" class="feature-card chat-card">
+            <div class="features" id="features">
+                <a th:href="@{/chat}" class="feature-card chat-card disabled-feature" id="chatCard" tabindex="-1" title="请先选择AI提供商"> 
                     <span class="feature-icon">💬</span>
                     <div class="feature-title">智能对话</div>
                     <div class="feature-desc">与AI进行实时流式对话，体验智能交互</div>
                 </a>
                 
-                <a th:href="@{/translate}" class="feature-card translate-card">
+                <a th:href="@{/translate}" class="feature-card translate-card disabled-feature" id="translateCard" tabindex="-1" title="请先选择AI提供商">
                     <span class="feature-icon">🌐</span>
                     <div class="feature-title">语言翻译</div>
                     <div class="feature-desc">基于AI的智能翻译服务，支持多语言互译</div>
                 </a>
                 
-                <a th:href="@{/weather}" class="feature-card weather-card">
+                <a th:href="@{/weather}" class="feature-card weather-card disabled-feature" id="weatherCard" tabindex="-1" title="请先选择AI提供商">
                     <span class="feature-icon">🌤️</span>
                     <div class="feature-title">天气查询</div>
                     <div class="feature-desc">通过AI获取城市天气信息，智能天气助手</div>
@@ -85,59 +91,148 @@
     </div>
 
     <script>
-        // 页面加载完成后的初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 自动聚焦到API Key输入框
-            const apiKeyInput = document.querySelector('#apiKeyInput');
-            if (apiKeyInput) {
-                apiKeyInput.focus();
+            // 恢复AI供应商选择状态
+            const savedProvider = sessionStorage.getItem('selectedProvider');
+            if (savedProvider) {
+                const radio = document.querySelector(`input[name="provider"][value="${savedProvider}"]`);
+                if (radio) {
+                    radio.checked = true;
+                }
             }
-            
-            // AI提供商选择逻辑
             const ollamaOption = document.getElementById('ollamaOption');
             const deepseekOption = document.getElementById('deepseekOption');
             const apiKeyInputField = document.getElementById('apiKeyInput');
-            
-            // 初始化状态
-            updateProviderSelection();
-            
-            // 监听选择变化
-            ollamaOption.addEventListener('click', function() {
-                document.querySelector('input[name="provider"][value="ollama"]').checked = true;
+            const apiKeyGroup = document.getElementById('apiKeyGroup');
+            const submitBtn = document.getElementById('submitBtn');
+            const providerError = document.getElementById('providerError');
+            const apiKeyError = document.getElementById('apiKeyError');
+            const form = document.querySelector('form');
+
+            function updateFeatureCards() {
+                const selectedProvider = document.querySelector('input[name="provider"]:checked');
+                const chatCard = document.getElementById('chatCard');
+                const translateCard = document.getElementById('translateCard');
+                const weatherCard = document.getElementById('weatherCard');
+                const isConfigured = sessionStorage.getItem('aiConfigured') === 'true';
+                if (!selectedProvider || !isConfigured) {
+                    [chatCard, translateCard, weatherCard].forEach(card => {
+                        card.classList.add('disabled-feature');
+                    });
+                } else {
+                    [chatCard, translateCard, weatherCard].forEach(card => {
+                        card.classList.remove('disabled-feature');
+                    });
+                }
+            }
+
+            function updateFormVisibility() {
+                const isConfigured = sessionStorage.getItem('aiConfigured') === 'true';
+                if (isConfigured) {
+                    apiKeyGroup.style.display = 'none';
+                    submitBtn.style.display = 'none';
+                } else {
+                    const selectedProvider = document.querySelector('input[name="provider"]:checked');
+                    if (selectedProvider && selectedProvider.value === 'deepseek') {
+                        apiKeyGroup.style.display = '';
+                        submitBtn.style.display = '';
+                    } else {
+                        apiKeyGroup.style.display = 'none';
+                        submitBtn.style.display = '';
+                    }
+                }
+            }
+
+            function updateAll() {
                 updateProviderSelection();
-            });
-            
-            deepseekOption.addEventListener('click', function() {
-                document.querySelector('input[name="provider"][value="deepseek"]').checked = true;
-                updateProviderSelection();
-            });
-            
+                validateForm();
+                updateFeatureCards();
+                updateFormVisibility();
+            }
+
             function updateProviderSelection() {
-                const selectedProvider = document.querySelector('input[name="provider"]:checked').value;
+                const selectedProvider = document.querySelector('input[name="provider"]:checked');
                 
-                // 重置所有选项的样式
                 ollamaOption.classList.remove('selected');
                 deepseekOption.classList.remove('selected');
                 
-                if (selectedProvider === 'ollama') {
+                if (selectedProvider && selectedProvider.value === 'ollama') {
                     ollamaOption.classList.add('selected');
-                    document.getElementById('apiKeyGroup').style.display = 'none';
+                    apiKeyGroup.style.display = 'none';
                     apiKeyInputField.required = false;
                     apiKeyInputField.value = '';
-                } else {
+                    apiKeyError.style.display = 'none';
+                } else if (selectedProvider && selectedProvider.value === 'deepseek') {
                     deepseekOption.classList.add('selected');
-                    document.getElementById('apiKeyGroup').style.display = 'block';
+                    apiKeyGroup.style.display = 'block';
                     apiKeyInputField.required = true;
                 }
             }
-            
-            // 添加表单提交动画
-            const form = document.querySelector('form');
-            form.addEventListener('submit', function() {
-                const submitBtn = document.querySelector('.btn-primary');
-                submitBtn.textContent = '设置中...';
-                submitBtn.disabled = true;
+
+            function validateForm() {
+                const selectedProvider = document.querySelector('input[name="provider"]:checked');
+                const apiKeyValue = apiKeyInputField.value.trim();
+                
+                let isValid = true;
+                
+                if (!selectedProvider) {
+                    providerError.style.display = 'block';
+                    isValid = false;
+                } else {
+                    providerError.style.display = 'none';
+                }
+                
+                if (selectedProvider && selectedProvider.value === 'deepseek') {
+                    if (!apiKeyValue) {
+                        apiKeyError.style.display = 'block';
+                        isValid = false;
+                    } else {
+                        apiKeyError.style.display = 'none';
+                    }
+                }
+                
+                // 更新提交按钮状态
+                submitBtn.disabled = !isValid;
+                submitBtn.style.display = 'block'; // 始终显示按钮
+            }
+
+            // 供应商切换时，清除配置状态并恢复表单
+            document.querySelectorAll('input[name="provider"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    sessionStorage.removeItem('aiConfigured');
+                    sessionStorage.removeItem('selectedProvider');
+                    updateAll();
+                });
             });
+
+            // API Key输入时实时验证
+            apiKeyInputField.addEventListener('input', function() {
+                validateForm();
+            });
+
+            // 表单提交
+            form.addEventListener('submit', function(e) {
+                const selectedProvider = document.querySelector('input[name="provider"]:checked');
+                const apiKeyValue = apiKeyInputField.value.trim();
+                if (!selectedProvider) {
+                    e.preventDefault();
+                    providerError.style.display = 'block';
+                    return false;
+                }
+                if (selectedProvider.value === 'deepseek' && !apiKeyValue) {
+                    e.preventDefault();
+                    apiKeyError.style.display = 'block';
+                    return false;
+                }
+                // 设置配置状态
+                sessionStorage.setItem('aiConfigured', 'true');
+                sessionStorage.setItem('selectedProvider', selectedProvider.value);
+                updateFormVisibility();
+                updateFeatureCards();
+            });
+
+            // 页面加载时初始化
+            updateAll();
         });
     </script>
 </body>

@@ -27,7 +27,7 @@ public class WeatherController {
 
     @PostMapping("/weather")
     public String getWeather(@RequestParam String city, HttpSession session, Model model) {
-        String weather = weatherService.getWeather(city, session);
+        String weather = weatherService.getWeatherViaMCP(city, session);
         model.addAttribute("weatherInfo", weather);
         model.addAttribute("city", city);
         return "weather";
@@ -53,11 +53,11 @@ public class WeatherController {
             PrintWriter writer = response.getWriter();
             
             // 发送初始消息
-            writer.write("data: 正在查询 " + city + " 的天气信息...\n\n");
+            writer.write("data: 正在智能查询 " + city + " 的天气信息...\n\n");
             writer.flush();
             
-            // 获取天气信息
-            String weatherInfo = weatherService.getWeather(city, session);
+            // 获取天气信息 - 使用MCP方式
+            String weatherInfo = weatherService.getWeatherViaMCP(city, session);
             
             // 模拟流式输出
             String[] lines = weatherInfo.split("\n");
