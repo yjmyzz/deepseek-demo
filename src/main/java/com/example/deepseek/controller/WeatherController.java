@@ -2,6 +2,7 @@ package com.example.deepseek.controller;
 
 import com.example.deepseek.service.WeatherService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -38,11 +39,20 @@ public class WeatherController {
     @GetMapping(value = "/weather/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public void getWeatherStream(@RequestParam String city, 
                                 HttpSession session, 
-                                PrintWriter writer) {
+                                HttpServletResponse response) {
         try {
             log.info("开始流式天气查询: {}", city);
             
-            // 设置SSE头部
+            // 设置SSE响应头
+            response.setContentType("text/event-stream");
+            response.setCharacterEncoding("UTF-8");
+            response.setHeader("Cache-Control", "no-cache");
+            response.setHeader("Connection", "keep-alive");
+            response.setHeader("Access-Control-Allow-Origin", "*");
+            
+            PrintWriter writer = response.getWriter();
+            
+            // 发送初始消息
             writer.write("data: 正在查询 " + city + " 的天气信息...\n\n");
             writer.flush();
             
@@ -69,9 +79,14 @@ public class WeatherController {
             
         } catch (Exception e) {
             log.error("流式天气查询异常: {}", e.getMessage(), e);
-            writer.write("data: 查询天气信息时出现错误，请稍后重试。\n\n");
-            writer.write("data: [DONE]\n\n");
-            writer.flush();
+            try {
+                PrintWriter writer = response.getWriter();
+                writer.write("data: 查询天气信息时出现错误，请稍后重试。\n\n");
+                writer.write("data: [DONE]\n\n");
+                writer.flush();
+            } catch (IOException ex) {
+                log.error("发送错误信息失败: {}", ex.getMessage());
+            }
         }
     }
 } 

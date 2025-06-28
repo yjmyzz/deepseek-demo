@@ -164,6 +164,15 @@ class AIStreamHandler {
      * 处理接收到的消息
      */
     handleMessage(data) {
+        console.log('AIStreamHandler收到消息:', data);
+        
+        // 检查是否是完成信号
+        if (data === '[DONE]') {
+            console.log('收到完成信号，结束流式传输');
+            this.endStream();
+            return;
+        }
+        
         // 调用自定义消息处理函数
         if (this.options.onMessage) {
             this.options.onMessage(data, this);
