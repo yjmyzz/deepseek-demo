@@ -13,6 +13,9 @@
         <div class="header">
             <h1>🌤️ DeepSeek 天气</h1>
             <p>通过AI获取城市天气信息，智能天气助手</p>
+            <div class="provider-info" id="providerInfo">
+                <span class="provider-badge" id="providerBadge">🖥️ 本地 Ollama</span>
+            </div>
         </div>
         
         <div class="main-content">
@@ -61,6 +64,9 @@
             if (input) {
                 input.focus();
             }
+            
+            // 更新提供商徽章
+            AIUtils.updateProviderBadge('providerBadge');
             
             // 添加表单提交动画
             const form = document.querySelector('form');

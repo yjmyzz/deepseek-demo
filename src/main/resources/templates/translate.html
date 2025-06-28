@@ -13,6 +13,9 @@
         <div class="header">
             <h1>🌐 DeepSeek 翻译</h1>
             <p>基于AI的智能翻译服务，支持多语言互译</p>
+            <div class="provider-info" id="providerInfo">
+                <span class="provider-badge" id="providerBadge">🖥️ 本地 Ollama</span>
+            </div>
         </div>
         
         <div class="main-content">
@@ -92,7 +95,7 @@
             },
             
             // 错误处理配置
-            showErrorInResult: true,
+            showErrorInResult: false,
             errorMessage: '翻译失败，请重试',
             
             // 自定义消息处理
@@ -151,6 +154,9 @@
             if (textarea) {
                 textarea.focus();
             }
+            
+            // 更新提供商徽章
+            AIUtils.updateProviderBadge('providerBadge');
             
             // 表单提交处理
             const form = document.getElementById('translateForm');
