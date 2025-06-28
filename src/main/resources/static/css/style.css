@@ -15,12 +15,16 @@ body {
 
 /* 通用容器 */
 .container {
-    max-width: 800px;
+    max-width: 460px;
     margin: 0 auto;
     padding: 15px;
     flex: 1;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 40px);
+    margin-bottom: 40px;
 }
 
 /* 页面头部 */
@@ -28,17 +32,19 @@ body {
     text-align: center;
     margin-bottom: 20px;
     color: white;
+    width: 100%;
 }
 
 .header h1 {
-    font-size: 2.5rem;
+    font-size: 1.6rem;
     margin-bottom: 10px;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
 .header p {
-    font-size: 1.1rem;
+    font-size: 0.85rem;
     opacity: 0.9;
+    line-height: 1.2;
 }
 
 /* 提供商信息样式 */
@@ -68,22 +74,24 @@ body {
 /* 主要内容区域 */
 .main-content {
     background: rgba(255, 255, 255, 0.95);
-    border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    backdrop-filter: blur(15px);
     flex: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    width: 100%;
+    text-align: center;
 }
 
 /* 表单样式 */
 .form-container {
-    padding: 20px;
+    padding: 16px;
     background: #f8f9fa;
-    border-radius: 15px;
-    margin: 15px;
-    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    margin: 12px;
+    border: 1px solid #e9ecef;
 }
 
 .form-group {
@@ -168,11 +176,11 @@ body {
 
 /* 结果显示区域 */
 .result-container {
-    padding: 15px;
+    padding: 16px;
     background: white;
-    border-radius: 15px;
-    margin: 15px;
-    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    margin: 12px;
+    border: 1px solid #e9ecef;
     min-height: 80px;
 }
 
@@ -428,13 +436,14 @@ body {
 /* 聊天页面特定样式 */
 .chat-container {
     background: rgba(255, 255, 255, 0.95);
-    border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    backdrop-filter: blur(15px);
     flex: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    width: 100%;
 }
 
 .chat-messages {
@@ -620,6 +629,7 @@ body {
 @media (max-width: 768px) {
     .container {
         padding: 8px;
+        max-width: 100%;
     }
     
     .header {
@@ -627,17 +637,17 @@ body {
     }
     
     .header h1 {
-        font-size: 2rem;
+        font-size: 1.4rem;
     }
     
     .form-container {
-        padding: 15px;
-        margin: 10px;
+        padding: 12px;
+        margin: 8px;
     }
     
     .result-container {
         padding: 12px;
-        margin: 10px;
+        margin: 8px;
         min-height: 60px;
     }
     
