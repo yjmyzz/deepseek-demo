@@ -25,21 +25,27 @@
 - 智能过滤AI思考过程（`<think>`标签）
 - 支持上下文对话
 - 优雅的打字机效果
+- ![对话-本地模型](images/chat-ollama.png)
+- ![对话-远程deepseek](images/chat-deepseek.png)
 
 ### 语言翻译 🌐
 - 支持中英文双向翻译
 - 智能处理相同语言的情况
 - 流式翻译输出
 - 准确的翻译结果
+- ![语言翻译](images/translate-ollama.png)
 
 ### 天气查询 🌤️
 - 基于AI的天气信息生成
 - 支持全球城市查询
 - 友好的信息展示
+- ![天气查询](images/weather.png)
 
 ### 双AI提供商 🔄
 - **本地Ollama**: 快速、免费、隐私安全，支持离线使用
 - **远程DeepSeek**: 功能强大、模型最新，支持更多高级功能
+- ![首页](images/index.png)
+- ![设置api-key](images/index-set-apikey.png)
 
 ## 🛠️ 技术栈
 
