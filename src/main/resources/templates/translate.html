@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>AI翻译 - 智能翻译</title>
+    <title>DeepSeek Demo - 智能翻译</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/style.css">
@@ -9,54 +9,56 @@
 <body>
     <a href="/" class="back-btn">← 返回首页</a>
     
-    <div class="container">
-        <div class="header">
-            <h1>🌐 DeepSeek 翻译</h1>
-            <p>基于AI的智能翻译服务，支持多语言互译</p>
-            <div class="provider-info" id="providerInfo">
-                <span class="provider-badge" id="providerBadge">🖥️ 本地 Ollama</span>
-            </div>
-        </div>
-        
-        <div class="main-content">
-            <div class="form-container">
-                <form id="translateForm">
-                    <div class="form-group">
-                        <label class="form-label">📝 输入文本</label>
-                        <textarea name="text" 
-                                  id="textInput"
-                                  class="form-input" 
-                                  placeholder="请输入要翻译的内容..." 
-                                  rows="4" 
-                                  required></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">🎯 目标语言</label>
-                        <select name="targetLang" id="targetLangSelect" class="form-select">
-                            <option value="en">🇺🇸 英文</option>
-                            <option value="zh">🇨🇳 中文</option>
-                            <option value="ja">🇯🇵 日文</option>
-                            <option value="ko">🇰🇷 韩文</option>
-                            <option value="fr">🇫🇷 法文</option>
-                            <option value="de">🇩🇪 德文</option>
-                            <option value="es">🇪🇸 西班牙文</option>
-                            <option value="ru">🇷🇺 俄文</option>
-                        </select>
-                    </div>
-                    
-                    <button type="submit" id="translateBtn" class="btn btn-primary">
-                        🔄 开始翻译
-                    </button>
-                </form>
+    <div class="home-container">
+        <div class="home-content">
+            <div class="home-header">
+                <h1>🤖 DeepSeek Demo</h1>
+                <p>基于AI的智能翻译服务，支持多语言互译</p>
+                <div class="provider-info" id="providerInfo">
+                    <span class="provider-badge" id="providerBadge">🖥️ 本地 Ollama</span>
+                </div>
             </div>
             
-            <div id="resultContainer" class="result-container" style="display: none;">
-                <div class="result-title">
-                    <span>✨</span>
-                    翻译结果
+            <div class="main-content">
+                <div class="form-container">
+                    <form id="translateForm">
+                        <div class="form-group">
+                            <label class="form-label">📝 输入文本</label>
+                            <textarea name="text" 
+                                      id="textInput"
+                                      class="form-input" 
+                                      placeholder="请输入要翻译的内容..." 
+                                      rows="4" 
+                                      required></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">🎯 目标语言</label>
+                            <select name="targetLang" id="targetLangSelect" class="form-select">
+                                <option value="en">🇺🇸 英文</option>
+                                <option value="zh">🇨🇳 中文</option>
+                                <option value="ja">🇯🇵 日文</option>
+                                <option value="ko">🇰🇷 韩文</option>
+                                <option value="fr">🇫🇷 法文</option>
+                                <option value="de">🇩🇪 德文</option>
+                                <option value="es">🇪🇸 西班牙文</option>
+                                <option value="ru">🇷🇺 俄文</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" id="translateBtn" class="btn btn-primary">
+                            🔄 开始翻译
+                        </button>
+                    </form>
                 </div>
-                <div id="resultContent" class="result-content"></div>
+                
+                <div id="resultContainer" class="result-container" style="display: none;">
+                    <div class="result-title">
+                        <span>✨</span>
+                        翻译结果
+                    </div>
+                    <div id="resultContent" class="result-content"></div>
+                </div>
             </div>
         </div>
     </div>

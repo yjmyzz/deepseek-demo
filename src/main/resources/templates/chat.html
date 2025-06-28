@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>AI Chat - 智能对话</title>
+    <title>DeepSeek Demo - 智能对话</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/style.css">
@@ -9,41 +9,43 @@
 <body>
     <a href="/" class="back-btn">← 返回首页</a>
     
-    <div class="container">
-        <div class="header">
-            <h1>🤖 AI Chat</h1>
-            <p>与AI进行智能对话，体验流式响应</p>
-            <div class="provider-info" id="providerInfo">
-                <span class="provider-badge" id="providerBadge">🖥️ 本地 Ollama</span>
-            </div>
-        </div>
-        
-        <div class="chat-container">
-            <div class="chat-messages" id="chatMessages">
-                <div class="message ai">
-                    <div class="message-content">你好！我是AI助手，有什么可以帮助你的吗？</div>
+    <div class="home-container">
+        <div class="home-content">
+            <div class="home-header">
+                <h1>🤖 DeepSeek Demo</h1>
+                <p>与AI进行智能对话，体验流式响应</p>
+                <div class="provider-info" id="providerInfo">
+                    <span class="provider-badge" id="providerBadge">🖥️ 本地 Ollama</span>
                 </div>
             </div>
             
-            <div class="typing-indicator" id="typingIndicator">
-                AI正在思考中...
-            </div>
-            
-            <div class="input-area">
-                <div class="input-group">
-                    <input type="text" 
-                           id="messageInput" 
-                           class="message-input" 
-                           placeholder="输入你的问题..." 
-                           onkeypress="handleKeyPress(event, sendMessage)">
-                    <button class="send-btn" onclick="sendMessage()" id="sendBtn">
-                        发送
-                    </button>
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message ai">
+                        <div class="message-content">你好！我是AI助手，有什么可以帮助你的吗？</div>
+                    </div>
+                </div>
+                
+                <div class="typing-indicator" id="typingIndicator">
+                    AI正在思考中...
+                </div>
+                
+                <div class="input-area">
+                    <div class="input-group">
+                        <input type="text" 
+                               id="messageInput" 
+                               class="message-input" 
+                               placeholder="输入你的问题..." 
+                               onkeypress="handleKeyPress(event, sendMessage)">
+                        <button class="send-btn" onclick="sendMessage()" id="sendBtn">
+                            发送
+                        </button>
+                    </div>
                 </div>
             </div>
+            
+            <div class="status" id="status"></div>
         </div>
-        
-        <div class="status" id="status"></div>
     </div>
     
     <div class="copyright">

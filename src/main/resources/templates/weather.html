@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>AI天气 - 智能天气查询</title>
+    <title>DeepSeek Demo - 智能天气查询</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/style.css">
@@ -9,40 +9,42 @@
 <body>
     <a href="/" class="back-btn">← 返回首页</a>
     
-    <div class="container">
-        <div class="header">
-            <h1>🌤️ DeepSeek 天气</h1>
-            <p>通过AI获取城市天气信息，智能天气助手</p>
-            <div class="provider-info" id="providerInfo">
-                <span class="provider-badge" id="providerBadge">🖥️ 本地 Ollama</span>
-            </div>
-        </div>
-        
-        <div class="main-content">
-            <div class="form-container">
-                <form id="weatherForm">
-                    <div class="form-group">
-                        <label class="form-label">🏙️ 城市名称</label>
-                        <input type="text" 
-                               name="city" 
-                               id="cityInput"
-                               class="form-input" 
-                               placeholder="请输入城市名称，如：北京、上海、广州..." 
-                               required>
-                    </div>
-                    
-                    <button type="submit" id="queryBtn" class="btn btn-primary">
-                        🔍 查询天气
-                    </button>
-                </form>
+    <div class="home-container">
+        <div class="home-content">
+            <div class="home-header">
+                <h1>🤖 DeepSeek Demo</h1>
+                <p>通过AI获取城市天气信息，智能天气助手</p>
+                <div class="provider-info" id="providerInfo">
+                    <span class="provider-badge" id="providerBadge">🖥️ 本地 Ollama</span>
+                </div>
             </div>
             
-            <div id="resultContainer" class="result-container" style="display: none;">
-                <div class="result-title">
-                    <span>🌡️</span>
-                    天气信息
+            <div class="main-content">
+                <div class="form-container">
+                    <form id="weatherForm">
+                        <div class="form-group">
+                            <label class="form-label">🏙️ 城市名称</label>
+                            <input type="text" 
+                                   name="city" 
+                                   id="cityInput"
+                                   class="form-input" 
+                                   placeholder="请输入城市名称，如：北京、上海、广州..." 
+                                   required>
+                        </div>
+                        
+                        <button type="submit" id="queryBtn" class="btn btn-primary">
+                            🔍 查询天气
+                        </button>
+                    </form>
                 </div>
-                <div id="resultContent" class="result-content"></div>
+                
+                <div id="resultContainer" class="result-container" style="display: none;">
+                    <div class="result-title">
+                        <span>🌡️</span>
+                        天气信息
+                    </div>
+                    <div id="resultContent" class="result-content"></div>
+                </div>
             </div>
         </div>
     </div>
