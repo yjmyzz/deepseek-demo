@@ -213,7 +213,7 @@ class AIStreamHandler {
             }
             
             if (shouldAddSpace) {
-                container.innerHTML += ' ' + newContent;
+                container.innerHTML += '^' + newContent;
             } else {
                 container.innerHTML += newContent;
             }
