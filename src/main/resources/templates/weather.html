@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>AI天气 - 智能天气查询</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <a href="/" class="back-btn">← 返回首页</a>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🌤️ DeepSeek 天气</h1>
+            <p>通过AI获取城市天气信息，智能天气助手</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="form-container">
+                <form th:action="@{/weather}" method="post">
+                    <div class="form-group">
+                        <label class="form-label">🏙️ 城市名称</label>
+                        <input type="text" 
+                               name="city" 
+                               id="cityInput"
+                               class="form-input" 
+                               placeholder="请输入城市名称，如：北京、上海、广州..." 
+                               required>
+                    </div>
+                    
+                    <button type="submit" id="queryBtn" class="btn btn-primary">
+                        🔍 查询天气
+                    </button>
+                </form>
+            </div>
+            
+            <div th:if="${weatherInfo}" class="result-container">
+                <div class="result-title">
+                    <span>🌡️</span>
+                    天气信息
+                </div>
+                <div class="result-content" th:text="${weatherInfo}"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="copyright">
+        © 2024 <a href="http://yjmyzz.cnblogs.com" target="_blank">菩提树下的杨过</a> - DeepSeek Demo
+    </div>
+
+    <!-- 引入通用AI流式处理库（仅使用工具函数） -->
+    <script src="/js/ai-stream.js"></script>
+
+    <script>
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('天气页面加载完成');
+            
+            // 自动聚焦到城市输入框
+            const input = document.getElementById('cityInput');
+            if (input) {
+                input.focus();
+            }
+            
+            // 添加表单提交动画
+            const form = document.querySelector('form');
+            const queryBtn = document.getElementById('queryBtn');
+            
+            form.addEventListener('submit', function() {
+                // 更新按钮状态
+                queryBtn.textContent = '查询中...';
+                queryBtn.disabled = true;
+                
+                // 3秒后恢复按钮状态（防止页面跳转后状态残留）
+                setTimeout(() => {
+                    queryBtn.textContent = '🔍 查询天气';
+                    queryBtn.disabled = false;
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html> 

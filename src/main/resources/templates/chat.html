@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>AI Chat - 智能对话</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <a href="/" class="back-btn">← 返回首页</a>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Chat</h1>
+            <p>与AI进行智能对话，体验流式响应</p>
+            <div class="provider-info" id="providerInfo">
+                <span class="provider-badge" id="providerBadge">🖥️ 本地 Ollama</span>
+            </div>
+        </div>
+        
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai">
+                    <div class="message-content">你好！我是AI助手，有什么可以帮助你的吗？</div>
+                </div>
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator">
+                AI正在思考中...
+            </div>
+            
+            <div class="input-area">
+                <div class="input-group">
+                    <input type="text" 
+                           id="messageInput" 
+                           class="message-input" 
+                           placeholder="输入你的问题..." 
+                           onkeypress="handleKeyPress(event, sendMessage)">
+                    <button class="send-btn" onclick="sendMessage()" id="sendBtn">
+                        发送
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status" id="status"></div>
+    </div>
+    
+    <div class="copyright">
+        © 2024 <a href="http://yjmyzz.cnblogs.com" target="_blank">菩提树下的杨过</a> - DeepSeek Demo
+    </div>
+
+    <!-- 引入通用AI流式处理库 -->
+    <script src="/js/ai-stream.js"></script>
+
+    <script>
+        // 创建AI流式处理器实例
+        const aiHandler = new AIStreamHandler({
+            // 聊天特定配置
+            endpoint: '/chat/stream',
+            messageParam: 'message',
+            
+            // UI元素配置
+            sendButton: document.getElementById('sendBtn'),
+            statusElement: document.getElementById('status'),
+            typingIndicator: document.getElementById('typingIndicator'),
+            scrollContainer: document.getElementById('chatMessages'),
+            
+            // 启用消息计数器（用于聊天功能）
+            enableMessageCounter: true,
+            
+            // 按钮文本配置
+            buttonTexts: {
+                default: '发送',
+                loading: '发送中...'
+            },
+            
+            // 状态文本配置
+            statusTexts: {
+                connecting: '正在连接...',
+                connected: '连接成功，正在接收回复...',
+                error: '连接错误，请重试',
+                complete: '对话完成'
+            },
+            
+            // 自定义消息处理（用于聊天功能）
+            onMessage: function(data, handler) {
+                const messageId = handler.getCurrentMessageId();
+                const aiResponse = document.getElementById(messageId);
+                if (aiResponse) {
+                    // 使用智能空格处理
+                    const newContent = data;
+                    const currentText = aiResponse.innerText;
+                    
+                    if (newContent.startsWith(' ')) {
+                        aiResponse.innerHTML += newContent;
+                    } else {
+                        let shouldAddSpace = false;
+                        if (currentText.length > 0) {
+                            const lastChar = currentText[currentText.length - 1];
+                            if (/[a-zA-Z0-9]/.test(lastChar) && /[A-Z]/.test(newContent[0])) {
+                                shouldAddSpace = true;
+                            }
+                        }
+                        
+                        if (shouldAddSpace) {
+                            aiResponse.innerHTML += ' ' + newContent;
+                        } else {
+                            aiResponse.innerHTML += newContent;
+                        }
+                    }
+                }
+            },
+            
+            // 错误处理
+            onError: function(event, handler) {
+                console.error('聊天流错误:', event);
+            },
+            
+            // 开始处理回调
+            onStart: function(params) {
+                console.log('开始聊天流:', params);
+                // 显示输入指示器
+                handler.showTypingIndicator();
+            },
+            
+            // 结束处理回调
+            onEnd: function() {
+                console.log('聊天流结束');
+            }
+        });
+
+        /**
+         * 处理键盘事件
+         */
+        function handleKeyPress(event, callback) {
+            AIUtils.handleKeyPress(event, callback);
+        }
+
+        /**
+         * 发送消息
+         */
+        function sendMessage() {
+            const message = AIUtils.getInputValue('messageInput');
+            
+            if (!message) {
+                console.log('消息为空，不发送');
+                return;
+            }
+            
+            if (aiHandler.isCurrentlyStreaming()) {
+                console.log('正在流式传输中，忽略新请求');
+                return;
+            }
+            
+            console.log('发送消息:', message);
+            
+            // 添加用户消息
+            aiHandler.addMessage(message, 'user');
+            AIUtils.clearInput('messageInput');
+            
+            // 开始流式对话
+            aiHandler.startStream({ message: message });
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('聊天页面加载完成');
+            
+            // 自动聚焦到输入框
+            const input = document.getElementById('messageInput');
+            input.focus();
+            
+            // 更新提供商徽章
+            AIUtils.updateProviderBadge('providerBadge');
+        });
+    </script>
+</body>
+</html> 

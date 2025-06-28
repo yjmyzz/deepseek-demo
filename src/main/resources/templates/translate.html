@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>AI翻译 - 智能翻译</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <a href="/" class="back-btn">← 返回首页</a>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🌐 DeepSeek 翻译</h1>
+            <p>基于AI的智能翻译服务，支持多语言互译</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="form-container">
+                <form id="translateForm">
+                    <div class="form-group">
+                        <label class="form-label">📝 输入文本</label>
+                        <textarea name="text" 
+                                  id="textInput"
+                                  class="form-input" 
+                                  placeholder="请输入要翻译的内容..." 
+                                  rows="4" 
+                                  required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">🎯 目标语言</label>
+                        <select name="targetLang" id="targetLangSelect" class="form-select">
+                            <option value="en">🇺🇸 英文</option>
+                            <option value="zh">🇨🇳 中文</option>
+                            <option value="ja">🇯🇵 日文</option>
+                            <option value="ko">🇰🇷 韩文</option>
+                            <option value="fr">🇫🇷 法文</option>
+                            <option value="de">🇩🇪 德文</option>
+                            <option value="es">🇪🇸 西班牙文</option>
+                            <option value="ru">🇷🇺 俄文</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" id="translateBtn" class="btn btn-primary">
+                        🔄 开始翻译
+                    </button>
+                </form>
+            </div>
+            
+            <div id="resultContainer" class="result-container" style="display: none;">
+                <div class="result-title">
+                    <span>✨</span>
+                    翻译结果
+                </div>
+                <div id="resultContent" class="result-content"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="copyright">
+        © 2024 <a href="http://yjmyzz.cnblogs.com" target="_blank">菩提树下的杨过</a> - DeepSeek Demo
+    </div>
+
+    <!-- 引入通用AI流式处理库 -->
+    <script src="/js/ai-stream.js"></script>
+
+    <script>
+        // 创建AI流式处理器实例
+        const aiHandler = new AIStreamHandler({
+            // 翻译特定配置
+            endpoint: '/translate/stream',
+            
+            // UI元素配置
+            sendButton: document.getElementById('translateBtn'),
+            resultContainer: document.getElementById('resultContainer'),
+            resultContent: document.getElementById('resultContent'),
+            scrollContainer: document.getElementById('resultContainer'),
+            
+            // 按钮文本配置
+            buttonTexts: {
+                default: '🔄 开始翻译',
+                loading: '翻译中...'
+            },
+            
+            // 状态文本配置
+            statusTexts: {
+                connecting: '正在连接翻译服务...',
+                connected: '连接成功，正在翻译...',
+                error: '翻译服务连接错误，请重试',
+                complete: '翻译完成'
+            },
+            
+            // 错误处理配置
+            showErrorInResult: true,
+            errorMessage: '翻译失败，请重试',
+            
+            // 自定义消息处理
+            onMessage: function(data, handler) {
+                // 翻译功能使用简单的文本追加
+                handler.appendContent(data);
+            },
+            
+            // 错误处理
+            onError: function(event, handler) {
+                console.error('翻译流错误:', event);
+                // 只有在连接真正失败时才显示错误信息
+                if (handler.eventSource && handler.eventSource.readyState === EventSource.CLOSED) {
+                    handler.options.resultContent.textContent += '\n翻译失败，请重试';
+                }
+            },
+            
+            // 开始处理回调
+            onStart: function(params) {
+                console.log('开始翻译流:', params);
+                // 显示结果容器
+                AIUtils.showResultContainer('resultContainer', 'resultContent');
+            },
+            
+            // 结束处理回调
+            onEnd: function() {
+                console.log('翻译流结束');
+            }
+        });
+
+        /**
+         * 开始翻译
+         */
+        function startTranslate() {
+            const text = AIUtils.getInputValue('textInput');
+            const targetLang = document.getElementById('targetLangSelect').value;
+            
+            if (!text) {
+                alert('请输入要翻译的内容');
+                return;
+            }
+            
+            // 开始流式翻译
+            aiHandler.startStream({ 
+                text: text, 
+                targetLang: targetLang 
+            });
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('翻译页面加载完成');
+            
+            // 自动聚焦到文本输入框
+            const textarea = document.querySelector('#textInput');
+            if (textarea) {
+                textarea.focus();
+            }
+            
+            // 表单提交处理
+            const form = document.getElementById('translateForm');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                startTranslate();
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>DeepSeek Demo - AI功能演示</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="home-container">
+        <div class="home-content">
+            <div class="home-header">
+                <h1>🤖 DeepSeek Demo</h1>
+                <p>体验强大的AI功能，包括智能对话、语言翻译和天气查询</p>
+            </div>
+            
+            <!-- 状态消息显示 - 移到表单上方 -->
+            <div th:if="${param.success}" class="status-success">
+                ✅ 设置成功！
+            </div>
+            <div th:if="${param.error}" class="status-error">
+                <div th:if="${param.error == 'missing_api_key'}">
+                    ❌ 请为远程DeepSeek输入有效的API Key
+                </div>
+                <div th:unless="${param.error == 'missing_api_key'}">
+                    ❌ 设置失败，请重试
+                </div>
+            </div>
+            
+            <form th:action="@{/setApiKey}" method="post" class="api-key-form">
+                <div class="form-group">
+                    <label class="form-label">🌐 AI 提供商</label>
+                    <div class="provider-options">
+                        <label class="provider-option" id="ollamaOption">
+                            <input type="radio" name="provider" value="ollama" checked>
+                            <div class="provider-icon">🖥️</div>
+                            <div class="provider-name">本地 Ollama</div>
+                            <div class="provider-desc">快速免费</div>
+                        </label>
+                        <label class="provider-option" id="deepseekOption">
+                            <input type="radio" name="provider" value="deepseek">
+                            <div class="provider-icon">☁️</div>
+                            <div class="provider-name">远程 DeepSeek</div>
+                            <div class="provider-desc">功能强大</div>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="apiKeyGroup" style="display: none;">
+                    <label class="form-label">🔑 API Key</label>
+                    <input type="password" 
+                           name="apiKey" 
+                           class="form-input" 
+                           placeholder="请输入你的 DeepSeek API Key" 
+                           id="apiKeyInput">
+                </div>
+                
+                <button type="submit" class="btn btn-primary">开始使用</button>
+            </form>
+            
+            <div class="features">
+                <a th:href="@{/chat}" class="feature-card chat-card">
+                    <span class="feature-icon">💬</span>
+                    <div class="feature-title">智能对话</div>
+                    <div class="feature-desc">与AI进行实时流式对话，体验智能交互</div>
+                </a>
+                
+                <a th:href="@{/translate}" class="feature-card translate-card">
+                    <span class="feature-icon">🌐</span>
+                    <div class="feature-title">语言翻译</div>
+                    <div class="feature-desc">基于AI的智能翻译服务，支持多语言互译</div>
+                </a>
+                
+                <a th:href="@{/weather}" class="feature-card weather-card">
+                    <span class="feature-icon">🌤️</span>
+                    <div class="feature-title">天气查询</div>
+                    <div class="feature-desc">通过AI获取城市天气信息，智能天气助手</div>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="copyright">
+        © 2024 <a href="http://yjmyzz.cnblogs.com" target="_blank">菩提树下的杨过</a> - DeepSeek Demo
+    </div>
+
+    <script>
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 自动聚焦到API Key输入框
+            const apiKeyInput = document.querySelector('#apiKeyInput');
+            if (apiKeyInput) {
+                apiKeyInput.focus();
+            }
+            
+            // AI提供商选择逻辑
+            const ollamaOption = document.getElementById('ollamaOption');
+            const deepseekOption = document.getElementById('deepseekOption');
+            const apiKeyInputField = document.getElementById('apiKeyInput');
+            
+            // 初始化状态
+            updateProviderSelection();
+            
+            // 监听选择变化
+            ollamaOption.addEventListener('click', function() {
+                document.querySelector('input[name="provider"][value="ollama"]').checked = true;
+                updateProviderSelection();
+            });
+            
+            deepseekOption.addEventListener('click', function() {
+                document.querySelector('input[name="provider"][value="deepseek"]').checked = true;
+                updateProviderSelection();
+            });
+            
+            function updateProviderSelection() {
+                const selectedProvider = document.querySelector('input[name="provider"]:checked').value;
+                
+                // 重置所有选项的样式
+                ollamaOption.classList.remove('selected');
+                deepseekOption.classList.remove('selected');
+                
+                if (selectedProvider === 'ollama') {
+                    ollamaOption.classList.add('selected');
+                    document.getElementById('apiKeyGroup').style.display = 'none';
+                    apiKeyInputField.required = false;
+                    apiKeyInputField.value = '';
+                } else {
+                    deepseekOption.classList.add('selected');
+                    document.getElementById('apiKeyGroup').style.display = 'block';
+                    apiKeyInputField.required = true;
+                }
+            }
+            
+            // 添加表单提交动画
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function() {
+                const submitBtn = document.querySelector('.btn-primary');
+                submitBtn.textContent = '设置中...';
+                submitBtn.disabled = true;
+            });
+        });
+    </script>
+</body>
+</html> 
