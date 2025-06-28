@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.ResourceAccessException;
 
 import java.net.URLEncoder;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
 @Slf4j
@@ -73,8 +74,11 @@ public class WeatherService {
         for (String line : lines) {
             if (line.trim().isEmpty()) continue;
             
+            // 解码URL编码的字符
+            String decodedLine = decodeUrlEncodedText(line.trim());
+            
             // 添加emoji和格式化
-            String formattedLine = line.trim();
+            String formattedLine = decodedLine;
             if (formattedLine.contains("°C")) {
                 formattedLine = "🌡️ " + formattedLine;
             } else if (formattedLine.contains("km/h")) {
@@ -89,6 +93,54 @@ public class WeatherService {
         }
         
         return formattedInfo.toString();
+    }
+    
+    /**
+     * 解码URL编码的文本
+     */
+    private String decodeUrlEncodedText(String text) {
+        try {
+            // 查找并解码URL编码的部分
+            StringBuilder result = new StringBuilder();
+            int start = 0;
+            
+            while (true) {
+                int percentIndex = text.indexOf('%', start);
+                if (percentIndex == -1) {
+                    // 没有更多编码字符，添加剩余部分
+                    result.append(text.substring(start));
+                    break;
+                }
+                
+                // 添加编码前的部分
+                result.append(text.substring(start, percentIndex));
+                
+                // 查找编码序列的结束位置
+                int end = percentIndex;
+                while (end < text.length() && end < percentIndex + 9 && 
+                       text.charAt(end) == '%' || 
+                       (end > percentIndex && Character.isLetterOrDigit(text.charAt(end)))) {
+                    end++;
+                }
+                
+                // 尝试解码
+                try {
+                    String encodedPart = text.substring(percentIndex, end);
+                    String decodedPart = URLDecoder.decode(encodedPart, StandardCharsets.UTF_8);
+                    result.append(decodedPart);
+                } catch (Exception e) {
+                    // 解码失败，保持原样
+                    result.append(text.substring(percentIndex, end));
+                }
+                
+                start = end;
+            }
+            
+            return result.toString();
+        } catch (Exception e) {
+            log.warn("URL解码失败，返回原文本: {}", text);
+            return text;
+        }
     }
 } 
  
