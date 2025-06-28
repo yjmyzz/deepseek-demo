@@ -1,6 +1,13 @@
 # DeepSeek Demo - AI功能演示项目
 
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-blue?style=flat-square&logo=github)](https://github.com/yjmyzz/deepseek-demo)
+[![Java](https://img.shields.io/badge/Java-21+-orange?style=flat-square&logo=java)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.1.9-green?style=flat-square&logo=spring)](https://spring.io/projects/spring-boot)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
+
 一个基于Spring Boot的现代化AI功能演示项目，支持智能对话、语言翻译和天气查询功能。本项目展示了如何集成多种AI服务，提供流畅的用户体验。
+
+**🌐 GitHub地址**: [https://github.com/yjmyzz/deepseek-demo](https://github.com/yjmyzz/deepseek-demo)
 
 ## 🎯 项目特色
 
@@ -74,7 +81,7 @@
 ### 1. 克隆项目
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/yjmyzz/deepseek-demo.git
 cd deepseek-demo
 ```
 
@@ -497,9 +504,12 @@ public class AiConfig {
 4. **问题解决**: 解决流式输出、错误处理等技术难题
 5. **文档编写**: 生成详细的README文档
 
-## 👨‍💻 作者
+## ��‍💻 作者
 
-**菩提树下的杨过** - [博客](http://yjmyzz.cnblogs.com)
+**菩提树下的杨过** 
+- 🌐 [个人博客](http://yjmyzz.cnblogs.com)
+- 🐙 [GitHub主页](https://github.com/yjmyzz)
+- 📧 通过GitHub联系
 
 ## 🤝 贡献
 
@@ -507,10 +517,23 @@ public class AiConfig {
 
 ### 贡献指南
 1. Fork本项目
+   - 访问 [https://github.com/yjmyzz/deepseek-demo](https://github.com/yjmyzz/deepseek-demo)
+   - 点击右上角的 "Fork" 按钮
 2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
 3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 打开Pull Request
+
+### 问题反馈
+- 🐛 **Bug报告**: [创建Issue](https://github.com/yjmyzz/deepseek-demo/issues/new)
+- 💡 **功能建议**: [创建Issue](https://github.com/yjmyzz/deepseek-demo/issues/new)
+- 📖 **文档改进**: [创建Issue](https://github.com/yjmyzz/deepseek-demo/issues/new)
+
+### 代码贡献
+- 确保代码符合项目规范
+- 添加必要的测试用例
+- 更新相关文档
+- 提交清晰的提交信息
 
 ## 📞 支持
 
@@ -525,10 +548,17 @@ public class AiConfig {
    - 启动时查看控制台输出
    - 检查错误堆栈信息
 
-3. **提交Issue**
+3. **获取帮助**
+   - 📖 **查看文档**: 仔细阅读本README文档
+   - 🐛 **提交Issue**: [GitHub Issues](https://github.com/yjmyzz/deepseek-demo/issues)
+   - 💬 **讨论交流**: [GitHub Discussions](https://github.com/yjmyzz/deepseek-demo/discussions)
+   - 📧 **联系作者**: 通过GitHub个人主页联系
+
+4. **提交Issue时请包含**
    - 详细描述问题现象
-   - 提供环境信息
-   - 附上相关日志
+   - 提供环境信息（操作系统、Java版本等）
+   - 附上相关日志和错误信息
+   - 提供复现步骤
 
 ## 🚀 未来计划
 
