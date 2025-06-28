@@ -207,15 +207,46 @@ class AIStreamHandler {
             if (currentText.length > 0) {
                 const lastChar = currentText[currentText.length - 1];
                 // 如果最后一个字符是字母或数字，且新内容以大写字母开头，添加空格
-                if (/[a-zA-Z0-9]/.test(lastChar) && /[A-Z]/.test(newContent[0])) {
+                if (/[a-zA-Z0-9]/.test(lastChar) && /[a-zA-Z]/.test(newContent[0])) {
                     shouldAddSpace = true;
                 }
             }
             
             if (shouldAddSpace) {
-                container.innerHTML += '^' + newContent;
+                container.innerHTML += ' ' + newContent;
             } else {
                 container.innerHTML += newContent;
+            }
+        }
+    }
+
+    /**
+     * 为聊天消息添加智能空格处理
+     */
+    appendToChatMessage(newContent, messageId) {
+        const aiResponse = document.getElementById(messageId);
+        if (!aiResponse) return;
+        
+        const currentText = aiResponse.innerText;
+        
+        // 如果新内容以空格开头，直接追加
+        if (newContent.startsWith(' ')) {
+            aiResponse.innerHTML += newContent;
+        } else {
+            // 检查是否需要添加空格
+            let shouldAddSpace = false;
+            if (currentText.length > 0) {
+                const lastChar = currentText[currentText.length - 1];
+                // 如果最后一个字符是字母或数字，且新内容以字母开头，添加空格
+                if (/[a-zA-Z0-9]/.test(lastChar) && /[a-zA-Z]/.test(newContent[0])) {
+                    shouldAddSpace = true;
+                }
+            }
+            
+            if (shouldAddSpace) {
+                aiResponse.innerHTML += ' ' + newContent;
+            } else {
+                aiResponse.innerHTML += newContent;
             }
         }
     }
