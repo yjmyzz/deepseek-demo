@@ -20,7 +20,7 @@
         
         <div class="main-content">
             <div class="form-container">
-                <form th:action="@{/weather}" method="post">
+                <form id="weatherForm">
                     <div class="form-group">
                         <label class="form-label">🏙️ 城市名称</label>
                         <input type="text" 
@@ -37,12 +37,12 @@
                 </form>
             </div>
             
-            <div th:if="${weatherInfo}" class="result-container">
+            <div id="resultContainer" class="result-container" style="display: none;">
                 <div class="result-title">
                     <span>🌡️</span>
                     天气信息
                 </div>
-                <div class="result-content" th:text="${weatherInfo}"></div>
+                <div id="resultContent" class="result-content"></div>
             </div>
         </div>
     </div>
@@ -51,10 +51,82 @@
         © 2025 <a href="http://yjmyzz.cnblogs.com" target="_blank">菩提树下的杨过</a> - DeepSeek Demo
     </div>
 
-    <!-- 引入通用AI流式处理库（仅使用工具函数） -->
+    <!-- 引入通用AI流式处理库 -->
     <script src="/js/ai-stream.js"></script>
 
     <script>
+        // 创建AI流式处理器实例
+        const aiHandler = new AIStreamHandler({
+            // 天气查询特定配置
+            endpoint: '/weather/stream',
+            
+            // UI元素配置
+            sendButton: document.getElementById('queryBtn'),
+            resultContainer: document.getElementById('resultContainer'),
+            resultContent: document.getElementById('resultContent'),
+            scrollContainer: document.getElementById('resultContainer'),
+            
+            // 按钮文本配置
+            buttonTexts: {
+                default: '🔍 查询天气',
+                loading: '查询中...'
+            },
+            
+            // 状态文本配置
+            statusTexts: {
+                connecting: '正在连接天气服务...',
+                connected: '连接成功，正在查询天气...',
+                error: '天气服务连接错误，请重试',
+                complete: '查询完成'
+            },
+            
+            // 错误处理配置
+            showErrorInResult: false,
+            errorMessage: '查询失败，请重试',
+            
+            // 自定义消息处理
+            onMessage: function(data, handler) {
+                // 天气查询使用简单的文本追加
+                handler.appendContent(data);
+            },
+            
+            // 错误处理
+            onError: function(event, handler) {
+                console.error('天气查询流错误:', event);
+                // 只有在连接真正失败时才显示错误信息
+                if (handler.eventSource && handler.eventSource.readyState === EventSource.CLOSED) {
+                    handler.options.resultContent.textContent += '\n查询失败，请重试';
+                }
+            },
+            
+            // 开始处理回调
+            onStart: function(params) {
+                console.log('开始天气查询流:', params);
+                // 显示结果容器
+                AIUtils.showResultContainer('resultContainer', 'resultContent');
+            },
+            
+            // 结束处理回调
+            onEnd: function() {
+                console.log('天气查询流结束');
+            }
+        });
+
+        /**
+         * 开始天气查询
+         */
+        function startWeatherQuery() {
+            const city = AIUtils.getInputValue('cityInput');
+            
+            if (!city) {
+                alert('请输入城市名称');
+                return;
+            }
+            
+            // 开始流式天气查询
+            aiHandler.startStream({ city: city });
+        }
+
         // 页面加载完成后的初始化
         document.addEventListener('DOMContentLoaded', function() {
             console.log('天气页面加载完成');
@@ -68,20 +140,11 @@
             // 更新提供商徽章
             AIUtils.updateProviderBadge('providerBadge');
             
-            // 添加表单提交动画
-            const form = document.querySelector('form');
-            const queryBtn = document.getElementById('queryBtn');
-            
-            form.addEventListener('submit', function() {
-                // 更新按钮状态
-                queryBtn.textContent = '查询中...';
-                queryBtn.disabled = true;
-                
-                // 3秒后恢复按钮状态（防止页面跳转后状态残留）
-                setTimeout(() => {
-                    queryBtn.textContent = '🔍 查询天气';
-                    queryBtn.disabled = false;
-                }, 3000);
+            // 表单提交处理
+            const form = document.getElementById('weatherForm');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                startWeatherQuery();
             });
         });
     </script>
