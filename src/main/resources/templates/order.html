@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>DeepSeek 订单查询</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <a href="/" class="back-btn">← 返回首页</a>
+    
+    <div class="home-container">
+        <div class="home-content">
+            <div class="home-header">
+                <h1>📦 DeepSeek 订单查询</h1>
+                <p>通过AI智能查询订单状态信息</p>
+                <div class="provider-info" id="providerInfo">
+                    <span class="provider-badge" id="providerBadge">🖥️ 本地 Ollama</span>
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <div class="form-container">
+                    <div class="form-group">
+                        <label class="form-label">🏷️ 订单号 <span class="required">*</span></label>
+                        <input type="text" 
+                               id="orderNumber" 
+                               name="orderNumber" 
+                               class="form-input" 
+                               placeholder="请输入11位数字订单号" 
+                               pattern="[0-9]{11}"
+                               maxlength="11"
+                               required>
+                        <div class="form-hint">请输入11位数字订单号，例如：12345678901</div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button type="button" id="streamBtn" class="btn btn-primary" onclick="startStreamQuery()">
+                            ⚡ 开始查询
+                        </button>
+                    </div>
+                    
+                    <!-- 示例订单号 -->
+                    <div class="example-section">
+                        <h3>📋 示例订单号</h3>
+                        <div class="example-list">
+                            <button class="example-btn" onclick="setOrderNumber('12345678901')">12345678901 (已发货)</button>
+                            <button class="example-btn" onclick="setOrderNumber('12345678902')">12345678902 (待付款)</button>
+                            <button class="example-btn" onclick="setOrderNumber('12345678903')">12345678903 (已完成)</button>
+                            <button class="example-btn" onclick="setOrderNumber('12345678904')">12345678904 (处理中)</button>
+                            <button class="example-btn" onclick="setOrderNumber('12345678905')">12345678905 (已取消)</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 流式查询结果显示区域 -->
+                <div id="streamResultContainer" class="result-container" style="display: none;">
+                    <div class="result-title">
+                        <span>⚡</span>
+                        查询结果
+                    </div>
+                    <div id="streamContent" class="result-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="copyright">
+        © 2025 <a href="http://yjmyzz.cnblogs.com" target="_blank">菩提树下的杨过</a> - DeepSeek Demo
+    </div>
+
+    <!-- 引入通用AI流式处理库 -->
+    <script src="/js/ai-stream.js"></script>
+
+    <script>
+        // 创建AI流式处理器实例
+        const aiHandler = new AIStreamHandler({
+            // 订单查询特定配置
+            endpoint: '/order/stream',
+            
+            // UI元素配置
+            sendButton: document.getElementById('streamBtn'),
+            resultContainer: document.getElementById('streamResultContainer'),
+            resultContent: document.getElementById('streamContent'),
+            scrollContainer: document.getElementById('streamContent'),
+            
+            // 按钮文本配置
+            buttonTexts: {
+                default: '⚡ 开始查询',
+                loading: '查询中...'
+            },
+            
+            // 状态文本配置
+            statusTexts: {
+                connecting: '正在连接查询服务...',
+                connected: '连接成功，正在查询...',
+                error: '查询服务连接错误，请重试',
+                complete: '查询完成'
+            },
+            
+            // 错误处理配置
+            showErrorInResult: false,
+            errorMessage: '查询失败，请重试',
+            
+            // 自定义消息处理
+            onMessage: function(data, handler) {
+                // 订单查询功能使用简单的文本追加
+                handler.appendContent(data);
+            },
+            
+            // 错误处理
+            onError: function(event, handler) {
+                console.error('订单查询流错误:', event);
+                // 只有在连接真正失败时才显示错误信息
+                if (handler.eventSource && handler.eventSource.readyState === EventSource.CLOSED) {
+                    handler.options.resultContent.textContent += '\n查询失败，请重试';
+                }
+            },
+            
+            // 开始处理回调
+            onStart: function(params) {
+                console.log('开始订单查询流:', params);
+                // 显示结果容器
+                AIUtils.showResultContainer('streamResultContainer', 'streamContent');
+            },
+            
+            // 结束处理回调
+            onEnd: function() {
+                console.log('订单查询流结束');
+            }
+        });
+
+        /**
+         * 设置订单号
+         */
+        function setOrderNumber(orderNumber) {
+            document.getElementById('orderNumber').value = orderNumber;
+        }
+        
+        /**
+         * 开始流式查询
+         */
+        function startStreamQuery() {
+            const orderNumber = document.getElementById('orderNumber').value.trim();
+            
+            if (!orderNumber) {
+                alert('请输入订单号');
+                return;
+            }
+            
+            if (!/^\d{11}$/.test(orderNumber)) {
+                alert('订单号格式错误，请输入11位数字');
+                return;
+            }
+            
+            // 开始流式查询
+            aiHandler.startStream({ orderNumber: orderNumber });
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('订单查询页面加载完成');
+            
+            // 自动聚焦到订单号输入框
+            const input = document.getElementById('orderNumber');
+            input.focus();
+            
+            // 更新提供商徽章
+            AIUtils.updateProviderBadge('providerBadge');
+            
+            // 检查AI配置状态
+            const isConfigured = sessionStorage.getItem('aiConfigured') === 'true';
+            if (!isConfigured) {
+                alert('请先在首页选择AI提供商后再使用订单查询功能');
+                window.location.href = '/';
+            }
+        });
+    </script>
+</body>
+</html> 

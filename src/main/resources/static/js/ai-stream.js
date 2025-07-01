@@ -120,6 +120,8 @@ class AIStreamHandler {
             urlParams.append('targetLang', params.targetLang);
         } else if (params.city) {
             urlParams.append('city', params.city);
+        } else if (params.orderNumber) {
+            urlParams.append('orderNumber', params.orderNumber);
         }
         
         const queryString = urlParams.toString();

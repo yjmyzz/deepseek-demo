@@ -1,6 +1,7 @@
 package com.example.deepseek.service;
 
 import com.example.deepseek.config.AiConfig;
+import com.example.deepseek.constant.AiConstants;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import org.springframework.web.client.ResourceAccessException;
 import java.net.URLEncoder;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Random;
 
 @Slf4j
 @Service
@@ -23,6 +25,7 @@ public class WeatherService {
     
     private final AiConfig aiConfig;
     private final RestTemplate restTemplate = new RestTemplate();
+    private static final Random random = new Random();
     
     /**
      * 直接调用wttr.in API获取天气信息（原有方式）
@@ -66,46 +69,46 @@ public class WeatherService {
     }
     
     /**
-     * MCP方式获取天气信息 - 通过AI模型智能查询
+     * 通过AI智能查询天气信息
      */
-    public String getWeatherViaMCP(String city, HttpSession session) {
+    public String getWeatherViaAI(String city, HttpSession session) {
         try {
             // 获取AI提供商信息
-            String provider = (String) session.getAttribute("aiProvider");
+            String provider = (String) session.getAttribute(AiConstants.Session.AI_PROVIDER);
             
             // 检查是否已选择AI提供商
             if (provider == null || provider.trim().isEmpty()) {
-                return "请先选择AI提供商（本地Ollama或远程DeepSeek）后再进行天气查询。";
+                return AiConstants.ErrorMessage.SELECT_PROVIDER_FIRST;
             }
             
             // 构建智能天气查询提示词
             String prompt = String.format("""
                 你是一个智能天气助手。请帮我查询 %s 的天气信息。
                 
-                你可以通过以下方式获取天气数据：
-                - 访问 https://wttr.in/%s?format=3 获取实时天气信息
-                - 或者使用其他可靠的天气数据源
+                请提供以下信息：
+                1. 当前天气状况
+                2. 温度范围
+                3. 湿度
+                4. 风力
+                5. 未来几天的天气预报
+                6. 出行建议
                 
-                请以友好的方式向我介绍 %s 的天气情况，包括温度、天气状况、湿度、风速等信息。
-                如果无法获取信息，请告诉我可能的原因。
-                
-                请直接回答，不要解释查询过程。
-                """, city, city, city);
+                请以友好的方式回答，并包含相关的emoji表情。
+                """, city);
             
-            if ("ollama".equals(provider)) {
+            if (AiConstants.Provider.OLLAMA.equals(provider)) {
                 // 使用Ollama进行智能查询
                 return callOllamaForWeather(prompt, city, session);
-            } else if ("deepseek".equals(provider)) {
+            } else if (AiConstants.Provider.DEEPSEEK.equals(provider)) {
                 // 使用DeepSeek进行智能查询
                 return callDeepSeekForWeather(prompt, city, session);
             } else {
-                return "不支持的AI提供商：" + provider + "，请选择本地Ollama或远程DeepSeek。";
+                return String.format(AiConstants.ErrorMessage.UNSUPPORTED_PROVIDER, provider);
             }
             
         } catch (Exception e) {
-            log.error("MCP天气查询异常: {}", e.getMessage(), e);
-            // 如果MCP方式失败，回退到直接查询
-            return "智能查询失败，正在使用直接查询方式...\n\n" + getWeather(city, session);
+            log.error("AI天气查询异常: {}", e.getMessage(), e);
+            return "智能天气查询失败，请稍后重试。";
         }
     }
     
@@ -116,10 +119,16 @@ public class WeatherService {
         try {
             String ollamaUrl = aiConfig.getOllama().getBaseUrl() + aiConfig.getOllama().getApiPath();
             
-            // 构建Ollama请求 - 修复JSON格式问题
+            String systemPrompt = """
+                你是一个智能天气助手。请根据用户提供的城市信息，提供详细的天气信息和建议。
+                请包含当前天气状况、温度、湿度、风力、未来天气预报和出行建议。
+                使用友好的语言和相关的emoji表情。
+                """;
+            
             String requestBody = String.format(
-                "{\"model\":\"%s\",\"messages\":[{\"role\":\"system\",\"content\":\"你是一个智能天气助手。当用户询问天气时，你需要：1. 访问wttr.in获取实时天气数据 2. 以友好的方式介绍天气情况 3. 如果无法获取数据，说明原因并建议重试。\"},{\"role\":\"user\",\"content\":\"%s\"}],\"stream\":false}",
+                "{\"model\":\"%s\",\"messages\":[{\"role\":\"system\",\"content\":\"%s\"},{\"role\":\"user\",\"content\":\"%s\"}],\"stream\":false}",
                 aiConfig.getOllama().getModel(), 
+                systemPrompt.replace("\"", "\\\"").replace("\n", "\\n"),
                 prompt.replace("\"", "\\\"").replace("\n", "\\n")
             );
             
@@ -136,24 +145,15 @@ public class WeatherService {
             );
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                // 解析Ollama响应
-                String aiResponse = parseOllamaResponse(response.getBody());
-                
-                // 如果AI没有提供具体天气信息，补充wttr.in数据
-                if (!aiResponse.contains("°C") && !aiResponse.contains("温度")) {
-                    String weatherData = getWeather(city, session);
-                    return aiResponse + "\n\n" + weatherData;
-                }
-                
-                return aiResponse;
+                return parseOllamaResponse(response.getBody());
             } else {
-                log.warn("Ollama调用失败: {}", response.getStatusCode());
-                return "智能查询服务暂时不可用，正在使用直接查询方式...\n\n" + getWeather(city, session);
+                log.warn(AiConstants.LogMessage.OLLAMA_CALL_FAILED, response.getStatusCode());
+                return "天气查询服务暂时不可用，请稍后重试。";
             }
             
         } catch (Exception e) {
-            log.error("Ollama智能查询异常: {}", e.getMessage(), e);
-            return "智能查询失败，正在使用直接查询方式...\n\n" + getWeather(city, session);
+            log.error(AiConstants.LogMessage.OLLAMA_QUERY_EXCEPTION, e.getMessage(), e);
+            return "天气查询失败，请稍后重试。";
         }
     }
     
@@ -162,17 +162,23 @@ public class WeatherService {
      */
     private String callDeepSeekForWeather(String prompt, String city, HttpSession session) {
         try {
-            String apiKey = (String) session.getAttribute("deepseekApiKey");
+            String apiKey = (String) session.getAttribute(AiConstants.Session.DEEPSEEK_API_KEY);
             if (apiKey == null || apiKey.trim().isEmpty()) {
-                return "请先设置DeepSeek API Key。";
+                return AiConstants.ErrorMessage.SET_DEEPSEEK_API_KEY;
             }
             
             String deepseekUrl = aiConfig.getDeepseek().getBaseUrl() + aiConfig.getDeepseek().getApiPath();
             
-            // 构建DeepSeek请求 - 修复JSON格式问题
+            String systemPrompt = """
+                你是一个智能天气助手。请根据用户提供的城市信息，提供详细的天气信息和建议。
+                请包含当前天气状况、温度、湿度、风力、未来天气预报和出行建议。
+                使用友好的语言和相关的emoji表情。
+                """;
+            
             String requestBody = String.format(
-                "{\"model\":\"%s\",\"messages\":[{\"role\":\"system\",\"content\":\"你是一个智能天气助手。当用户询问天气时，你需要：1. 访问wttr.in获取实时天气数据 2. 以友好的方式介绍天气情况 3. 如果无法获取数据，说明原因并建议重试。\"},{\"role\":\"user\",\"content\":\"%s\"}],\"stream\":false}",
+                "{\"model\":\"%s\",\"messages\":[{\"role\":\"system\",\"content\":\"%s\"},{\"role\":\"user\",\"content\":\"%s\"}],\"stream\":false}",
                 aiConfig.getDeepseek().getModel(), 
+                systemPrompt.replace("\"", "\\\"").replace("\n", "\\n"),
                 prompt.replace("\"", "\\\"").replace("\n", "\\n")
             );
             
@@ -190,24 +196,15 @@ public class WeatherService {
             );
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                // 解析DeepSeek响应
-                String aiResponse = parseDeepSeekResponse(response.getBody());
-                
-                // 如果AI没有提供具体天气信息，补充wttr.in数据
-                if (!aiResponse.contains("°C") && !aiResponse.contains("温度")) {
-                    String weatherData = getWeather(city, session);
-                    return aiResponse + "\n\n" + weatherData;
-                }
-                
-                return aiResponse;
+                return parseDeepSeekResponse(response.getBody());
             } else {
-                log.warn("DeepSeek调用失败: {}", response.getStatusCode());
-                return "智能查询服务暂时不可用，正在使用直接查询方式...\n\n" + getWeather(city, session);
+                log.warn(AiConstants.LogMessage.DEEPSEEK_CALL_FAILED, response.getStatusCode());
+                return "天气查询服务暂时不可用，请稍后重试。";
             }
             
         } catch (Exception e) {
-            log.error("DeepSeek智能查询异常: {}", e.getMessage(), e);
-            return "智能查询失败，正在使用直接查询方式...\n\n" + getWeather(city, session);
+            log.error(AiConstants.LogMessage.DEEPSEEK_QUERY_EXCEPTION, e.getMessage(), e);
+            return "天气查询失败，请稍后重试。";
         }
     }
     
@@ -216,28 +213,19 @@ public class WeatherService {
      */
     private String parseOllamaResponse(String response) {
         try {
-            log.info("Ollama响应: {}", response);
-            
-            // 简单的JSON解析，提取message内容
-            if (response.contains("\"message\"")) {
-                int start = response.indexOf("\"content\":\"") + 11;
-                int end = response.indexOf("\"", start);
-                if (start > 10 && end > start) {
-                    String content = response.substring(start, end);
-                    // 解码转义字符
-                    content = content.replace("\\n", "\n").replace("\\\"", "\"");
-                    // 过滤<think>标签及其内容
-                    content = filterThinkTags(content);
-                    return content;
+            if (response.contains(AiConstants.ResponseParse.CONTENT_FIELD)) {
+                int startIndex = response.indexOf(AiConstants.ResponseParse.CONTENT_FIELD) + 11;
+                int endIndex = response.indexOf("\"", startIndex);
+                if (endIndex == -1) {
+                    endIndex = response.length() - 1;
                 }
+                String content = response.substring(startIndex, endIndex);
+                return filterThinkTags(content.replace("\\n", "\n").replace("\\\"", "\""));
             }
-            
-            // 如果无法解析，返回原始响应
-            return "AI助手回复：\n" + response;
-            
+            return AiConstants.ResponseParse.CANNOT_PARSE_RESPONSE;
         } catch (Exception e) {
-            log.error("解析Ollama响应失败: {}", e.getMessage());
-            return "解析AI响应时出现错误。";
+            log.error(AiConstants.LogMessage.PARSE_OLLAMA_RESPONSE_FAILED, e.getMessage());
+            return AiConstants.ResponseParse.PARSE_ERROR;
         }
     }
     
@@ -246,71 +234,27 @@ public class WeatherService {
      */
     private String parseDeepSeekResponse(String response) {
         try {
-            log.info("DeepSeek响应: {}", response);
-            
-            // 简单的JSON解析，提取message内容
-            if (response.contains("\"message\"")) {
-                int start = response.indexOf("\"content\":\"") + 11;
-                int end = response.indexOf("\"", start);
-                if (start > 10 && end > start) {
-                    String content = response.substring(start, end);
-                    // 解码转义字符
-                    content = content.replace("\\n", "\n").replace("\\\"", "\"");
-                    // 过滤<think>标签及其内容
-                    content = filterThinkTags(content);
-                    return content;
+            if (response.contains(AiConstants.ResponseParse.CONTENT_FIELD)) {
+                int startIndex = response.indexOf(AiConstants.ResponseParse.CONTENT_FIELD) + 11;
+                int endIndex = response.indexOf("\"", startIndex);
+                if (endIndex == -1) {
+                    endIndex = response.length() - 1;
                 }
+                String content = response.substring(startIndex, endIndex);
+                return filterThinkTags(content.replace("\\n", "\n").replace("\\\"", "\""));
             }
-            
-            // 如果无法解析，返回原始响应
-            return "AI助手回复：\n" + response;
-            
+            return AiConstants.ResponseParse.CANNOT_PARSE_RESPONSE;
         } catch (Exception e) {
-            log.error("解析DeepSeek响应失败: {}", e.getMessage());
-            return "解析AI响应时出现错误。";
+            log.error(AiConstants.LogMessage.PARSE_DEEPSEEK_RESPONSE_FAILED, e.getMessage());
+            return AiConstants.ResponseParse.PARSE_ERROR;
         }
     }
     
     /**
-     * 过滤<think>标签及其内容
+     * 过滤思考标签
      */
     private String filterThinkTags(String content) {
-        if (content == null || content.isEmpty()) {
-            return content;
-        }
-        
-        // 先处理Unicode转义的标签
-        content = content.replace("\\u003cthink\\u003e", "<think>");
-        content = content.replace("\\u003c/think\\u003e", "</think>");
-        
-        StringBuilder result = new StringBuilder();
-        int start = 0;
-        
-        while (true) {
-            // 查找<think>标签的开始位置
-            int thinkStart = content.indexOf("<think>", start);
-            if (thinkStart == -1) {
-                // 没有找到<think>标签，添加剩余内容
-                result.append(content.substring(start));
-                break;
-            }
-            
-            // 添加<think>标签前的内容
-            result.append(content.substring(start, thinkStart));
-            
-            // 查找</think>标签的结束位置
-            int thinkEnd = content.indexOf("</think>", thinkStart);
-            if (thinkEnd == -1) {
-                // 没有找到结束标签，跳过这个<think>标签
-                start = thinkStart + 7;
-                continue;
-            }
-            
-            // 跳过整个<think>...</think>块
-            start = thinkEnd + 8;
-        }
-        
-        return result.toString().trim();
+        return content.replaceAll(AiConstants.Regex.THINK_TAGS, "").trim();
     }
     
     /**

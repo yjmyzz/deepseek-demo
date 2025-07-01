@@ -1,6 +1,7 @@
 package com.example.deepseek.service;
 
 import com.example.deepseek.config.AiConfig;
+import com.example.deepseek.constant.AiConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,7 +38,7 @@ class BaseAiServiceTest {
     private SseEmitter emitter;
 
     @InjectMocks
-    private TestBaseAiService baseAiService;
+    private BaseAiService baseAiService;
 
     @BeforeEach
     void setUp() {
@@ -57,27 +58,27 @@ class BaseAiServiceTest {
     }
 
     @Test
-    void testGetDefaultProvider() {
-        // 测试获取默认提供商
-        when(session.getAttribute("provider")).thenReturn("ollama");
-        String provider = baseAiService.getDefaultProvider(session);
-        assert "ollama".equals(provider);
-        
-        when(session.getAttribute("provider")).thenReturn(null);
-        provider = baseAiService.getDefaultProvider(session);
-        assert "ollama".equals(provider); // 默认值
+    void testGetProviderFromSession() {
+        // 测试从Session获取提供商
+        when(session.getAttribute(AiConstants.Session.AI_PROVIDER)).thenReturn(AiConstants.Provider.OLLAMA);
+        // 由于getProviderFromSession是私有方法，我们通过executeStreamRequest来测试
+        try {
+            baseAiService.executeStreamRequest("test", session, emitter);
+            verify(aiConfig).getOllama();
+        } catch (Exception e) {
+            // 在测试环境中可能会因为网络连接失败而抛出异常，这是正常的
+        }
     }
 
     @Test
     void testExecuteStreamRequestWithOllama() {
         // 测试执行Ollama流式请求
         String prompt = "Hello, how are you?";
-        String provider = "ollama";
-        String requestType = "聊天";
+        
+        when(session.getAttribute(AiConstants.Session.AI_PROVIDER)).thenReturn(AiConstants.Provider.OLLAMA);
         
         try {
-            baseAiService.executeStreamRequest(prompt, session, emitter, provider, requestType);
-            // 由于是异步操作，这里主要测试方法调用不抛出异常
+            baseAiService.executeStreamRequest(prompt, session, emitter);
             verify(aiConfig).getOllama();
         } catch (Exception e) {
             // 在测试环境中可能会因为网络连接失败而抛出异常，这是正常的
@@ -88,15 +89,14 @@ class BaseAiServiceTest {
     void testExecuteStreamRequestWithDeepseek() {
         // 测试执行DeepSeek流式请求
         String prompt = "Hello, how are you?";
-        String provider = "deepseek";
-        String requestType = "聊天";
         
-        when(session.getAttribute("deepseekApiKey")).thenReturn("test-api-key");
+        when(session.getAttribute(AiConstants.Session.AI_PROVIDER)).thenReturn(AiConstants.Provider.DEEPSEEK);
+        when(session.getAttribute(AiConstants.Session.DEEPSEEK_API_KEY)).thenReturn("test-api-key");
         
         try {
-            baseAiService.executeStreamRequest(prompt, session, emitter, provider, requestType);
+            baseAiService.executeStreamRequest(prompt, session, emitter);
             verify(aiConfig).getDeepseek();
-            verify(session).getAttribute("deepseekApiKey");
+            verify(session).getAttribute(AiConstants.Session.DEEPSEEK_API_KEY);
         } catch (Exception e) {
             // 在测试环境中可能会因为网络连接失败而抛出异常，这是正常的
         }
@@ -106,32 +106,32 @@ class BaseAiServiceTest {
     void testExecuteStreamRequestWithMissingApiKey() {
         // 测试DeepSeek缺少API Key的情况
         String prompt = "Hello, how are you?";
-        String provider = "deepseek";
-        String requestType = "聊天";
         
-        when(session.getAttribute("deepseekApiKey")).thenReturn(null);
+        when(session.getAttribute(AiConstants.Session.AI_PROVIDER)).thenReturn(AiConstants.Provider.DEEPSEEK);
+        when(session.getAttribute(AiConstants.Session.DEEPSEEK_API_KEY)).thenReturn(null);
         
         try {
-            baseAiService.executeStreamRequest(prompt, session, emitter, provider, requestType);
-            verify(session).getAttribute("deepseekApiKey");
+            baseAiService.executeStreamRequest(prompt, session, emitter);
+            verify(session).getAttribute(AiConstants.Session.DEEPSEEK_API_KEY);
         } catch (Exception e) {
             // 在测试环境中可能会因为网络连接失败而抛出异常，这是正常的
         }
     }
 
-    // 测试用的具体实现类
-    private static class TestBaseAiService extends BaseAiService {
-        public TestBaseAiService(AiConfig aiConfig) {
-            super(aiConfig);
-        }
-
-        public String getDefaultProvider(HttpSession session) {
-            return super.getDefaultProvider(session);
-        }
-
-        public void executeStreamRequest(String prompt, HttpSession session, SseEmitter emitter, 
-                                       String provider, String requestType) {
-            super.executeStreamRequest(prompt, session, emitter, provider, requestType);
+    @Test
+    void testExecuteStreamRequestWithUnsupportedProvider() {
+        // 测试不支持的提供商
+        String prompt = "Hello, how are you?";
+        
+        when(session.getAttribute(AiConstants.Session.AI_PROVIDER)).thenReturn("unsupported");
+        
+        try {
+            baseAiService.executeStreamRequest(prompt, session, emitter);
+            // 应该不会调用任何AI配置
+            verify(aiConfig, never()).getOllama();
+            verify(aiConfig, never()).getDeepseek();
+        } catch (Exception e) {
+            // 在测试环境中可能会因为网络连接失败而抛出异常，这是正常的
         }
     }
 } 
