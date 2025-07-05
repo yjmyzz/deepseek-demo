@@ -2,20 +2,19 @@ package com.example.deepseek.service;
 
 import com.example.deepseek.config.AiConfig;
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Service
-public class TranslateService extends BaseAiService {
-
-    public TranslateService(AiConfig aiConfig) {
-        super(aiConfig);
-    }
+@RequiredArgsConstructor
+public class TranslateService {
+    
+    private final BaseAiService baseAiService;
     
     public void streamTranslate(String text, String targetLang, HttpSession session, SseEmitter emitter) {
-        String provider = getDefaultProvider(session);
         String prompt = buildTranslatePrompt(text, targetLang);
-        executeStreamRequest(prompt, session, emitter, provider, "翻译");
+        baseAiService.executeStreamRequest(prompt, session, emitter);
     }
     
     /**
