@@ -3,7 +3,6 @@ package com.example.deepseek.controller;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,19 +37,9 @@ public class ApiKeyController {
         return "redirect:/";
     }
 
-    @PostMapping("/api-key")
-    @ResponseBody
-    public String setApiKey(@RequestParam String apiKey, HttpSession session) {
-        session.setAttribute("deepseekApiKey", apiKey);
-        return "success";
-    }
+
     
-    @PostMapping("/provider")
-    @ResponseBody
-    public String setProvider(@RequestParam String provider, HttpSession session) {
-        session.setAttribute("aiProvider", provider);
-        return "success";
-    }
+
 
     @GetMapping("/api/provider-info")
     @ResponseBody
